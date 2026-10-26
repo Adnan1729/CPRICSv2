@@ -1,0 +1,9 @@
+pandas
+pyarrow
+numpy
+scipy
+scikit-learn
+matplotlib
+jupyter
+ipykernel
+openpyxl
