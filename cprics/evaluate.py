@@ -53,3 +53,36 @@ def lead_time_table(cyc, threshold, horizon_days=180, drop_fraction=0.30):
             "lead_days": (actual - alarm).days if alarm is not None else None,
         })
     return pd.DataFrame(rows)
+
+
+import numpy as np, pandas as pd
+
+def compute_metrics(isl, archetype_by_site, concern=18, critical=30):
+    rows = []
+    for sid, g in isl.groupby("site_id"):
+        if sid not in archetype_by_site:
+            continue
+        g = g.sort_values("date")
+        crit = g.hard_amplitude.max() >= critical
+        cd = g.loc[g.hard_amplitude >= critical, "date"].min() if crit else pd.NaT
+        fd = g.loc[g.amplitude >= concern, "date"]
+        flagged = len(fd) > 0
+        adv = flagged and (not crit or fd.min() < cd)
+        lead = (cd - fd.min()).days / 30.44 if (crit and flagged and fd.min() < cd) else np.nan
+        rows.append(dict(arch=archetype_by_site[sid], critical=crit, flagged=flagged, adv=adv, lead=lead))
+    E = pd.DataFrame(rows)
+    nc = int(E.critical.sum())
+    TP = int((E.flagged & E.critical).sum()); FP = int((E.flagged & ~E.critical).sum())
+    FN = int((~E.flagged & E.critical).sum())
+    aw = E[E.critical & E.adv]
+    return {
+        "n_sites": len(E), "n_critical": nc,
+        "watchlist_size": int(E.flagged.sum()),
+        "precision": round(TP / (TP + FP), 3) if TP + FP else None,
+        "recall": round(TP / (TP + FN), 3) if TP + FN else None,
+        "advance_warned": int(len(aw)),
+        "advance_pct": round(len(aw) / nc, 3) if nc else None,
+        "median_lead_months": round(float(aw.lead.median()), 1) if len(aw) else None,
+        "archetype_counts": E.arch.value_counts().to_dict(),
+        "fp_by_archetype": E[E.flagged & ~E.critical].arch.value_counts().to_dict(),
+    }
