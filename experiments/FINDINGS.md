@@ -85,33 +85,18 @@ The reconciled multi-band watchlist (9/13.5/18m) catches all 36, at a cost of
 - **Nothing is a black box.** Every step is an inspectable rule or a 2-feature
   logistic whose coefficients we can show. No deep learning, by choice.
 
-## 5. Questions for you (Andy)
-1. Is Top35 (L/R) the parent signal and the five bands its Butterworth children?
-   (We believe so — it underlies the whole multi-band treatment.)
-2. Butterworth passband edges / filter order (how much do neighbouring bands
-   overlap?) and is the filtering zero-phase (filtfilt)? This affects the
-   validity of cross-band co-location and the 13.5m-adjacency reading in exp03.
-3. Is `Location_m` the same chainage origin across all channels? The multi-band
-   co-location (exp04) assumes a 6m island at X sits physically under a 9m island
-   at X.
-4. Are the Module 11 category thresholds (D18…I30) per-wavelength or universal?
-   exp04 used universal; it's roughly fair given similar scales, but confirm.
-5. What is `CT_Index` in the parquet? Could it be an existing severity/score we
-   can cross-check against?
-6. Provenance of the 0.8 peak-accumulation multiplier?
-
-## 6. Reproducibility
+## 5. Reproducibility
 Every experiment has a ledger row (experiments/ledger.md), a record .md, and an
 outputs/<name>/ folder. Pipeline experiments (01, 02, 04) have configs/runners
 and frozen models; research/negative experiments (03) live in notebooks/research/
 with findings.json. Re-run: `python run_pipeline.py exp01_continuous_9R` /
 `exp02_supervised_9R`; `python -m experiments.exp04_multiband_watchlist`.
 
-## 7. Honest limitations
+## 6. Honest limitations
 - "Critical" is an operational proxy (hard >= 30mm), not a confirmed safety event
   — no such labels exist.
 - Small positive counts (22 at 9m; 36 across bands) make metrics directional, not
   precise.
 - Ride quality / derailment dynamics are untested; exp03's jaggedness null is for
   amplitude-escalation only.
-  
+
