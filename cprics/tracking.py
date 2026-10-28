@@ -21,3 +21,19 @@ def track_islands(islands, max_center_gap=7.0):
         base += int(local.max()) + 1
         out.append(grp)
     return pd.concat(out).sort_values(["site_id", "date"]).reset_index(drop=True)
+
+def track_islands(islands, max_center_gap=7.0, tag="9R"):
+    """Assign a stable `site_id` to islands of the same location over time.
+    `tag` labels the band/rail in the id (e.g. '9R', '135R', '18R') so site_ids
+    stay unique when several bands are tracked together (exp04)."""
+    islands = islands.sort_values(["ELR", "TrackID", "center_location"]).copy()
+    out, base = [], 0
+    for (elr, track), grp in islands.groupby(["ELR", "TrackID"], sort=False):
+        grp = grp.copy()
+        centers = grp["center_location"].to_numpy()
+        local = np.concatenate([[0], (np.diff(centers) > max_center_gap).cumsum()]) \
+            if len(centers) > 1 else np.array([0])
+        grp["site_id"] = [f"{elr}_{track}_{tag}_{base + int(n)}" for n in local]
+        base += int(local.max()) + 1
+        out.append(grp)
+    return pd.concat(out).sort_values(["site_id", "date"]).reset_index(drop=True)
